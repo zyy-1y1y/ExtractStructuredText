@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>文本抽取 | 前端</title>
+  <style>
+    body{font-family: Arial, Helvetica, sans-serif; margin:20px;}
+    textarea{width:100%;height:120px}
+    .doc{border:1px solid #ddd;padding:10px;margin-bottom:8px;border-radius:6px}
+    .btn{display:inline-block;padding:8px 12px;border-radius:6px;background:#2b8cff;color:#fff;text-decoration:none;cursor:pointer}
+    .small{font-size:0.9em;color:#666}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid #eee;padding:8px}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h2>文本抽取（本地或嵌入）</h2>
+    <p class="small">说明：将非结构化文本粘贴到下方，点击“处理”。</p>
+
+    <div>
+      <label>Doc ID: <input v-model="docId" /></label>
+    </div>
+    <div style="margin-top:8px">
+      <textarea v-model="rawText" placeholder="在此粘贴检查报告或病历原文..."></textarea>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn" @click="processSingle">处理当前文本</button>
+      <button class="btn" style="background:#4caf50;margin-left:8px" @click="batchProcess">处理示例批量</button>
+      <button class="btn" style="background:#777;margin-left:8px" @click="downloadStructured">下载 JSON</button>
+    </div>
+
+    <h3 style="margin-top:20px">处理结果</h3>
+    <div v-if="results.length===0"><em>暂无结果</em></div>
+    <div v-for="r in results" :key="r.doc_id" class="doc">
+      <strong>{{r.doc_id}}</strong>
+      <div class="small">{{r.raw_text}}</div>
+      <div style="margin-top:8px">
+        <table>
+          <thead><tr><th>参数名</th><th>值</th></tr></thead>
+          <tbody>
+            <tr v-for="e in r.extracted" :key="e.param_name">
+              <td>{{e.param_name}}</td>
+              <td>{{e.param_value}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px">
+        <span class="small">状态: {{r.status}}</span>
+        <button style="margin-left:8px" @click="markFailure(r)">标注为失败并添加人工注释</button>
+      </div>
+    </div>
+
+    <h3 style="margin-top:20px">失败记录（来自后端）</h3>
+    <div style="margin-bottom:12px">
+      <button class="btn" style="background:#ff9800;" @click="triggerRetrain">触发 Retrain</button>
+      <span class="small" style="margin-left:8px">基于当前标注数据重新训练规则</span>
+    </div>
+    <div v-if="failures.length===0"><em>无</em></div>
+    <div v-for="f in failures" :key="f.doc_id" class="doc">
+      <strong>{{f.doc_id}}</strong>
+      <div class="small">{{f.raw_text}}</div>
+      <div class="small">原因: {{f.reason}}</div>
+      <div style="margin-top:8px">
+        <button @click="openAnnotate(f)" class="btn">人工标注</button>
+      </div>
+    </div>
+
+    <!-- 简单的注释弹窗 -->
+    <div v-if="annotateModal" style="position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center">
+      <div style="background:#fff;padding:20px;border-radius:8px;width:600px">
+        <h4>添加人工标注</h4>
+        <div>Doc ID: <input v-model="anno.doc_id" /></div>
+        <div style="margin-top:8px">Raw Text:<br/><textarea v-model="anno.raw_text" style="height:80px"></textarea></div>
+        <div style="margin-top:8px">Param Name: <input v-model="anno.param_name" /></div>
+        <div style="margin-top:8px">Param Value: <input v-model="anno.param_value" /></div>
+        <div style="margin-top:12px">
+          <button class="btn" @click="submitAnnotation">提交</button>
+          <button class="btn" style="background:#999;margin-left:8px" @click="annotateModal=false">取消</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+const { createApp, ref, reactive } = Vue;
+createApp({
+  setup(){
+    const docId = ref('DOC1')
+    const rawText = ref('检查报告：左室壁弥漫性运动减弱 左室收缩功能降低（LVEF: 40%） 备注: 无其他异常')
+    const results = ref([])
+    const failures = ref([])
+    const annotateModal = ref(false)
+    const anno = reactive({doc_id:'', raw_text:'', param_name:'', param_value:''})
+
+    async function processSingle(){
+      const payload = {documents:[{doc_id:docId.value, raw_text:rawText.value}]}
+      const res = await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      const j = await res.json()
+      results.value = j.results
+      // 更新 failures
+      await loadFailures()
+    }
+
+    async function batchProcess(){
+      // 简单示例批量
+      const docs = [
+        {doc_id:'A', raw_text:'检查报告：左室壁弥漫性运动减弱 左室收缩功能降低（LVEF: 40%） 备注: 无其他异常'},
+        {doc_id:'B', raw_text:'超声显示：LVEF=55%，舒张功能正常。左心房增大。'},
+        {doc_id:'C', raw_text:'心电图：窦性心律，ST段轻微抬高。评估：心肌缺血可能。'},
+        {doc_id:'D', raw_text:'病历小结：患者主诉胸闷，心室肌收缩力减弱，射血分数大约为 38% 左右。'},
+        {doc_id:'E', raw_text:'备注：LVEF大约四成。'}
+      ]
+      const res = await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({documents:docs})})
+      const j = await res.json()
+      results.value = j.results
+      await loadFailures()
+    }
+
+    async function loadFailures(){
+      const res = await fetch('/api/failures')
+      const j = await res.json()
+      failures.value = j.failures || []
+    }
+
+    function markFailure(r){
+      // 预填注释 modal
+      anno.doc_id = r.doc_id
+      anno.raw_text = r.raw_text
+      anno.param_name = ''
+      anno.param_value = ''
+      annotateModal.value = true
+    }
+
+    function openAnnotate(f){
+      anno.doc_id = f.doc_id
+      anno.raw_text = f.raw_text
+      annotateModal.value = true
+    }
+
+    async function submitAnnotation(){
+      const form = new FormData();
+      form.append('doc_id', anno.doc_id)
+      form.append('raw_text', anno.raw_text)
+      form.append('param_name', anno.param_name)
+      form.append('param_value', anno.param_value)
+      await fetch('/api/annotations/add',{method:'POST', body: form})
+      annotateModal.value = false
+      
+      // 提交标注后自动触发 retrain
+      await triggerRetrain()
+    }
+
+    async function triggerRetrain(){
+      try {
+        const response = await fetch('/api/retrain', {method: 'POST'})
+        const result = await response.json()
+        
+        if (result.status === 'applied') {
+          alert(`✅ 规则重训练成功！\n\n应用了 ${result.rules_count} 条新规则\n基于 ${result.annotations_count} 条标注数据\n\n规则库已更新，可以重新处理文档测试效果。`)
+        } else if (result.status === 'no_annotations') {
+          alert('⚠️ 没有找到标注数据\n\n请先对失败的文档进行人工标注，然后再次触发重训练。')
+        } else if (result.status === 'no_rules_generated') {
+          alert(`ℹ️ DeepSeek 未生成新规则\n\n基于 ${result.annotations_count} 条标注数据，DeepSeek 未生成新规则\n规则库保持不变。`)
+        } else if (result.status === 'deepseek_disabled') {
+          alert('🔧 DeepSeek 功能未启用\n\n如需使用自动规则生成功能，请启用 DeepSeek API 配置。')
+        } else {
+          alert(`未知状态: ${result.status}\n\n${result.message || '请检查后端日志'}`)
+        }
+      } catch (error) {
+        alert('❌ 重训练请求失败：' + error.message)
+      }
+    }
+
+    async function downloadStructured(){
+      const res = await fetch('/api/structured')
+      if (res.ok){
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = 'structured.json'; document.body.appendChild(a); a.click(); a.remove();
+      } else {
+        alert('尚未生成 structured.json')
+      }
+    }
+
+    // init
+    loadFailures()
+
+    return {docId, rawText, processSingle, batchProcess, results, failures, markFailure, annotateModal, anno, openAnnotate, submitAnnotation, downloadStructured}
+  }
+}).mount('#app')
+</script>
+</body>
+</html>
