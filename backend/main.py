@@ -70,7 +70,11 @@ async def api_process(req: ProcessRequest):
     rules = load_rules()                          # 加载结构化提取规则
     docs = [{'doc_id': d.doc_id, 'raw_text': d.raw_text} for d in req.documents] # 将请求中的文档列表转换为处理所需的格式
     results = process_documents(docs, rules)      # 调用处理函数进行结构化提取
-    return JSONResponse({'results': results})     # 将处理结果包装成 JSON 格式返回
+    # 确保中文文本正确编码
+    return JSONResponse(
+        content={'results': results},
+        media_type="application/json; charset=utf-8"
+    )     # 将处理结果包装成 JSON 格式返回
 
 @app.get('/api/structured')
 async def get_structured():
@@ -87,8 +91,14 @@ async def get_failures():
     if os.path.exists(path):
         with open(path, 'r', encoding='utf-8') as f:
             lines = [json.loads(l) for l in f if l.strip()]
-        return JSONResponse({'failures': lines})
-    return JSONResponse({'failures': []})
+        return JSONResponse(
+            content={'failures': lines},
+            media_type="application/json; charset=utf-8"
+        )
+    return JSONResponse(
+        content={'failures': []},
+        media_type="application/json; charset=utf-8"
+    )
 
 @app.post('/api/annotations/upload')
 async def upload_annotations(file: UploadFile = File(...)):

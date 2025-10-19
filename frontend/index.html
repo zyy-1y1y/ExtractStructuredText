@@ -1,9 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>智能文本抽取系统</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文本结构化提取工具</title>
   <style>
       body { 
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -406,19 +407,50 @@
     <div v-for="r in results" :key="r.doc_id" class="doc">
       <strong>{{r.doc_id}}</strong>
       <div class="small">{{r.raw_text}}</div>
-      <div style="margin-top:8px">
+      
+      <!-- 逐行处理结果 -->
+      <div style="margin-top:12px; border:1px solid #e0e0e0; border-radius:4px; padding:8px; background:#f9f9f9;">
+        <h4 style="margin:0 0 8px 0; font-size:14px;">📝 逐行处理结果</h4>
+        <div v-for="line in r.line_results" :key="line.line_number" style="margin-bottom:8px; padding:6px; border-left:3px solid #4caf50; background:white;">
+          <div style="font-size:12px; color:#666;">第{{line.line_number}}行:</div>
+          <div style="font-size:13px; margin:4px 0;">{{line.line_text}}</div>
+          <div v-if="line.extracted && line.extracted.length > 0" style="font-size:12px;">
+            <span style="color:#4caf50;">✅ 提取到参数:</span>
+            <span v-for="e in line.extracted" :key="e.param_name" style="margin-left:8px; background:#e8f5e8; padding:2px 6px; border-radius:3px;">
+              {{e.param_name}}: {{e.param_value}}
+            </span>
+          </div>
+          <div v-else style="font-size:12px; color:#ff9800;">
+            ⚠️ 未提取到参数
+          </div>
+        </div>
+      </div>
+      
+      <!-- 汇总结果 -->
+      <div style="margin-top:12px;">
+        <h4 style="margin:0 0 8px 0; font-size:14px;">📊 汇总结果</h4>
         <table>
-          <thead><tr><th>参数名</th><th>值</th></tr></thead>
+          <thead><tr><th>参数名</th><th>值</th><th>来源行号</th></tr></thead>
           <tbody>
             <tr v-for="e in r.extracted" :key="e.param_name">
               <td>{{e.param_name}}</td>
               <td>{{e.param_value}}</td>
+              <td>
+                <span v-for="line in r.line_results" :key="line.line_number">
+                  <span v-if="line.extracted && line.extracted.some(ext => ext.param_name === e.param_name && ext.param_value === e.param_value)">
+                    {{line.line_number}}
+                  </span>
+                </span>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
+      
       <div style="margin-top:8px">
         <span class="small">状态: {{r.status}}</span>
+        <span class="small" style="margin-left:12px;">总行数: {{r.line_results ? r.line_results.length : 0}}</span>
+        <span class="small" style="margin-left:12px;">成功行数: {{r.line_results ? r.line_results.filter(l => l.extracted && l.extracted.length > 0).length : 0}}</span>
         <button style="margin-left:8px" @click="markFailure(r)">标注为失败并添加人工注释</button>
       </div>
     </div>
@@ -578,11 +610,104 @@ createApp({
 
     function readFileContent(file) {
       return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = (e) => resolve(e.target.result)
-        reader.onerror = (e) => reject(new Error('文件读取失败'))
-        reader.readAsText(file, 'UTF-8')
+        // 尝试多种编码方式，优先使用自动检测
+        const encodings = ['UTF-8', 'GBK', 'GB2312', 'BIG5', 'ISO-8859-1', 'UTF-16LE', 'UTF-16BE']
+        
+        const tryNextEncoding = (index) => {
+          if (index >= encodings.length) {
+            // 如果所有编码都失败，尝试使用TextDecoder进行智能解码
+            const reader = new FileReader()
+            reader.onload = (e) => {
+              const arrayBuffer = e.target.result
+              try {
+                // 尝试使用UTF-8解码
+                const decoder = new TextDecoder('utf-8')
+                const content = decoder.decode(arrayBuffer)
+                if (!containsGarbledText(content)) {
+                  resolve(content)
+                } else {
+                  // 尝试GBK解码
+                  try {
+                    const gbkDecoder = new TextDecoder('gbk')
+                    const gbkContent = gbkDecoder.decode(arrayBuffer)
+                    resolve(gbkContent)
+                  } catch (gbkError) {
+                    reject(new Error('无法识别文件编码，请检查文件是否为有效的中文文本'))
+                  }
+                }
+              } catch (error) {
+                reject(new Error('文件解码失败：' + error.message))
+              }
+            }
+            reader.onerror = () => reject(new Error('文件读取失败'))
+            reader.readAsArrayBuffer(file)
+            return
+          }
+          
+          const encoding = encodings[index]
+          const reader = new FileReader()
+          
+          reader.onload = (e) => {
+            const content = e.target.result
+            // 检查内容是否包含乱码
+            if (!containsGarbledText(content)) {
+              console.log(`成功使用编码 ${encoding} 读取文件`)
+              resolve(content)
+            } else {
+              console.log(`编码 ${encoding} 检测到乱码，尝试下一个编码`)
+              // 如果检测到乱码，尝试下一个编码
+              tryNextEncoding(index + 1)
+            }
+          }
+          
+          reader.onerror = () => {
+            console.log(`编码 ${encoding} 读取失败，尝试下一个编码`)
+            // 当前编码读取失败，尝试下一个
+            tryNextEncoding(index + 1)
+          }
+          
+          // 使用指定的编码读取文件
+          reader.readAsText(file, encoding)
+        }
+        
+        // 开始尝试编码
+        tryNextEncoding(0)
       })
+    }
+    
+    // 检测文本是否包含乱码
+    function containsGarbledText(text) {
+      // 常见的中文乱码模式
+      const garbledPatterns = [
+        /[\uFFFD]/g, // Unicode替换字符
+        /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, // 控制字符
+        /[À-ÿ]{2,}/g, // 连续的拉丁字母扩展字符（可能是GBK乱码）
+        /[ÃÂÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ]{2,}/g // 更多可能的乱码模式
+      ]
+      
+      // 检查中文字符比例（如果文本很长但中文字符很少，可能是乱码）
+      const chineseChars = text.match(/[\u4e00-\u9fa5]/g) || []
+      const totalChars = text.length
+      const chineseRatio = chineseChars.length / totalChars
+      
+      // 如果文本长度超过100字符但中文比例低于5%，可能有问题
+      if (totalChars > 100 && chineseRatio < 0.05) {
+        return true
+      }
+      
+      // 检查乱码模式
+      for (const pattern of garbledPatterns) {
+        if (pattern.test(text)) {
+          return true
+        }
+      }
+      
+      // 检查是否包含用户提到的特定乱码模式
+      if (text.includes('��鱨�棺���ұ��������˶�����')) {
+        return true
+      }
+      
+      return false
     }
 
     // CSV标注文件上传相关函数

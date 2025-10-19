@@ -101,7 +101,7 @@ def save_structured_to_csv(data: List[Dict[str, Any]], path: str = os.path.join(
         data: 要保存的结构化数据列表
         path: 输出文件路径，默认为 OUTPUT_DIR/structured.csv
     """
-    fieldnames = ['doc_id', 'raw_text', 'extracted_json', 'status']  # CSV 文件列名
+    fieldnames = ['doc_id', 'raw_text', 'extracted_json', 'status', 'line_results_json']  # CSV 文件列名
     with open(path, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()  # 写入表头
@@ -110,7 +110,8 @@ def save_structured_to_csv(data: List[Dict[str, Any]], path: str = os.path.join(
                 'doc_id': d.get('doc_id'),  # 文档ID
                 'raw_text': d.get('raw_text'),  # 原始文本
                 'extracted_json': json.dumps(d.get('extracted', []), ensure_ascii=False),  # 提取结果（JSON格式）
-                'status': d.get('status')  # 处理状态
+                'status': d.get('status'),  # 处理状态
+                'line_results_json': json.dumps(d.get('line_results', []), ensure_ascii=False)  # 逐行处理结果（JSON格式）
             })
 
 
@@ -270,14 +271,14 @@ def call_deepseek_extract(text: str, system_prompt: Optional[str] = None) -> Lis
 
 def process_documents(documents: List[Dict[str, str]], rules: List[Dict[str, Any]]):
     """
-    批量处理文档，提取结构化信息
+    批量处理文档，逐行提取结构化信息
     
     Args:
         documents: 文档列表，每个文档包含 doc_id 和 raw_text
         rules: 解析规则列表
         
     Returns:
-        List[Dict[str, Any]]: 处理结果列表，包含提取信息和状态
+        List[Dict[str, Any]]: 处理结果列表，包含逐行提取信息和状态
     """
     results = []  # 存储处理结果的列表
     
@@ -287,21 +288,57 @@ def process_documents(documents: List[Dict[str, str]], rules: List[Dict[str, Any
         text = doc.get('raw_text', '')  # 获取原始文本内容
         
         try:
-            # 首先尝试使用规则解析
-            extracted = parse_with_rules(text, rules)
+            # 将文本按行分割
+            lines = text.split('\n')
+            line_results = []  # 存储每行的提取结果
             
-            # 如果规则解析失败，尝试使用 DeepSeek API
-            if not extracted:
-                extracted = call_deepseek_extract(text)
+            # 逐行处理文本
+            for line_num, line in enumerate(lines, 1):
+                line = line.strip()  # 去除首尾空白字符
+                if not line:  # 跳过空行
+                    continue
+                    
+                # 对每行文本进行结构化提取
+                extracted = parse_with_rules(line, rules)
+                
+                # 如果规则解析失败，尝试使用 DeepSeek API
+                if not extracted:
+                    extracted = call_deepseek_extract(line)
+                
+                # 记录每行的提取结果
+                line_result = {
+                    'line_number': line_num,
+                    'line_text': line,
+                    'extracted': extracted,
+                    'status': 'ok' if extracted else 'no_match'
+                }
+                line_results.append(line_result)
             
-            # 如果两种方法都失败，记录失败信息
-            if not extracted:
+            # 汇总文档的提取结果
+            all_extracted = []
+            for line_result in line_results:
+                all_extracted.extend(line_result['extracted'])
+            
+            # 如果整个文档都没有提取到任何信息，记录失败
+            if not all_extracted:
                 reason = 'no_extraction'  # 提取失败原因
                 log_failure(doc_id, text, reason)  # 记录失败
-                results.append({'doc_id': doc_id, 'raw_text': text, 'extracted': [], 'status': 'failed'})
+                results.append({
+                    'doc_id': doc_id, 
+                    'raw_text': text, 
+                    'extracted': [], 
+                    'status': 'failed',
+                    'line_results': line_results  # 包含逐行处理结果
+                })
             else:
                 # 提取成功，记录成功结果
-                results.append({'doc_id': doc_id, 'raw_text': text, 'extracted': extracted, 'status': 'ok'})
+                results.append({
+                    'doc_id': doc_id, 
+                    'raw_text': text, 
+                    'extracted': all_extracted, 
+                    'status': 'ok',
+                    'line_results': line_results  # 包含逐行处理结果
+                })
                 
         except Exception as e:
             # 处理过程中发生异常，记录异常信息
