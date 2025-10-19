@@ -1,3 +1,11 @@
+## 环境搭建（开发）
+
+1.安装 python3.14+
+2.安装 pycharm 或 vscode 或 trae(推荐)
+3.安装 Rust
+4.安装 visual studio 2022 并安装 desktop development with C++ (C++桌面应用开发)
+
+
 ## 如何运行（开发环境）
 
 1. 克隆/复制上述文件结构。

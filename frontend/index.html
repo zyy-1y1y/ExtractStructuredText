@@ -3,32 +3,402 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>文本抽取 | 前端</title>
+  <title>智能文本抽取系统</title>
   <style>
-    body{font-family: Arial, Helvetica, sans-serif; margin:20px;}
-    textarea{width:100%;height:120px}
-    .doc{border:1px solid #ddd;padding:10px;margin-bottom:8px;border-radius:6px}
-    .btn{display:inline-block;padding:8px 12px;border-radius:6px;background:#2b8cff;color:#fff;text-decoration:none;cursor:pointer}
-    .small{font-size:0.9em;color:#666}
-    table{width:100%;border-collapse:collapse}
-    th,td{border:1px solid #eee;padding:8px}
-  </style>
+      body { 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        margin: 0; 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      #app { 
+        max-width: 1200px; 
+        margin: 0 auto; 
+        padding: 20px;
+      }
+      h2 { 
+        color: #333; 
+        margin: 0 0 30px 0; 
+        font-size: 2.5em;
+        font-weight: 300;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+      }
+      .doc, div[style*="background:"] { 
+        background: rgba(255,255,255,0.95); 
+        backdrop-filter: blur(10px);
+        padding: 25px; 
+        margin-bottom: 25px; 
+        border-radius: 15px; 
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .doc:hover, div[style*="background:"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      }
+      .btn { 
+        padding: 12px 20px; 
+        border: none; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        margin: 5px; 
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #2b8cff;
+        color: #fff;
+        text-decoration: none;
+      }
+      .btn:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      }
+      .btn:disabled { 
+        opacity: 0.6; 
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .modal { 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%; 
+        background: rgba(0,0,0,0.5); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        z-index: 1000; 
+        backdrop-filter: blur(5px);
+      }
+      .modal-content { 
+        background: white; 
+        padding: 30px; 
+        border-radius: 15px; 
+        width: 500px; 
+        max-width: 90%; 
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        animation: modalSlideIn 0.3s ease;
+      }
+      @keyframes modalSlideIn {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .form-group { 
+        margin-bottom: 20px; 
+      }
+      label { 
+        display: block; 
+        margin-bottom: 8px; 
+        font-weight: 600;
+        color: #333;
+      }
+      input, textarea { 
+        width: 100%; 
+        padding: 12px; 
+        border: 2px solid #e1e5e9; 
+        border-radius: 8px; 
+        box-sizing: border-box; 
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+      }
+      input:focus, textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      textarea{width:100%;height:120px; min-height: 120px; resize: vertical; }
+      .small{font-size:0.85em;color:#666; line-height: 1.4;}
+      table{width:100%;border-collapse:collapse}
+      th,td{border:1px solid #eee;padding:8px}
+      .file-list { 
+        margin-top: 15px; 
+      }
+      .file-item { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 12px; 
+        background: #f8f9fa; 
+        margin-bottom: 8px; 
+        border-radius: 8px; 
+        border-left: 4px solid #667eea;
+        transition: background-color 0.3s ease;
+      }
+      .file-item:hover {
+        background: #e9ecef;
+      }
+      .status-processing { 
+        color: #ff9800; 
+        font-weight: 600; 
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+      }
+      .status-success { 
+        color: #4caf50; 
+        font-weight: 600; 
+      }
+      .status-error { 
+        color: #f44336; 
+        font-weight: 600; 
+      }
+      .rule-item {
+        background: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border-left: 4px solid #28a745;
+      }
+      .history-record {
+        background: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+        transition: transform 0.2s ease;
+      }
+      .history-record:hover {
+        transform: translateX(5px);
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .stat-card {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+      }
+      .stat-number {
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      .stat-label {
+        font-size: 0.9em;
+        opacity: 0.9;
+      }
+    </style>
 </head>
 <body>
   <div id="app">
-    <h2>文本抽取（本地或嵌入）</h2>
-    <p class="small">说明：将非结构化文本粘贴到下方，点击“处理”。</p>
+    <div style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); text-align: center;">
+      <h2>📊 智能文本抽取系统</h2>
+      <p style="color: #666; font-size: 1.1em; margin: 10px 0 0 0;">基于规则和AI的医疗文档结构化信息提取平台</p>
+    </div>
 
-    <div>
-      <label>Doc ID: <input v-model="docId" /></label>
+    <!-- 文档上传功能 -->
+    <div style="margin-bottom:20px; padding:15px; background:#f5f5f5; border-radius:8px;">
+      <h3>📁 文档上传</h3>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="file" id="fileInput" multiple accept=".txt,.csv,.json" style="display:none" @change="handleFileUpload">
+        <button class="btn" style="background:#2196F3" @click="triggerFileInput">
+          📄 选择文件
+        </button>
+        <span class="small">支持 .txt, .csv, .json 格式（可多选）</span>
+      </div>
+      <div v-if="uploadedFiles.length > 0" style="margin-top:10px;">
+        <div v-for="(file, index) in uploadedFiles" :key="index" style="display:flex; align-items:center; margin-bottom:5px;">
+          <span style="flex:1;">{{ file.name }} ({{ (file.size/1024).toFixed(1) }}KB)</span>
+          <button @click="removeFile(index)" style="background:#ff4444; color:white; border:none; padding:2px 8px; border-radius:3px; cursor:pointer;">×</button>
+        </div>
+        <button class="btn" style="background:#4CAF50; margin-top:8px;" @click="processUploadedFiles">
+          🚀 处理上传的文档
+        </button>
+        <div v-if="processingStatus" style="margin-top:8px; padding:8px; background:#e8f5e8; border-radius:4px; font-size:0.9em;">
+          {{ processingStatus }}
+        </div>
+      </div>
     </div>
-    <div style="margin-top:8px">
-      <textarea v-model="rawText" placeholder="在此粘贴检查报告或病历原文..."></textarea>
+
+    <!-- CSV标注文件上传功能 -->
+    <div style="margin-bottom:20px; padding:15px; background:#f8f5e8; border-radius:8px;">
+      <h3>📊 CSV标注文件上传</h3>
+      <p class="small">上传包含人工标注的CSV文件，用于规则重训练</p>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="file" id="csvInput" accept=".csv" style="display:none" @change="handleCsvUpload">
+        <button class="btn" style="background:#FF9800" @click="triggerCsvInput">
+          📊 选择CSV文件
+        </button>
+        <span class="small">支持标准CSV格式，包含 doc_id, raw_text, param_name, param_value 列</span>
+      </div>
+      <div v-if="csvFile" style="margin-top:10px;">
+        <div style="display:flex; align-items:center;">
+          <span style="flex:1;">{{ csvFile.name }} ({{ (csvFile.size/1024).toFixed(1) }}KB)</span>
+          <button @click="removeCsvFile" style="background:#ff4444; color:white; border:none; padding:2px 8px; border-radius:3px; cursor:pointer;">×</button>
+        </div>
+        <button class="btn" style="background:#4CAF50; margin-top:8px;" @click="uploadCsvAnnotations">
+          📤 上传标注文件
+        </button>
+        <div v-if="csvUploadStatus" style="margin-top:8px; padding:8px; background:#e8f5e8; border-radius:4px; font-size:0.9em;">
+          {{ csvUploadStatus }}
+        </div>
+      </div>
     </div>
-    <div style="margin-top:8px">
-      <button class="btn" @click="processSingle">处理当前文本</button>
-      <button class="btn" style="background:#4caf50;margin-left:8px" @click="batchProcess">处理示例批量</button>
-      <button class="btn" style="background:#777;margin-left:8px" @click="downloadStructured">下载 JSON</button>
+
+    <!-- 规则管理功能 -->
+    <div style="margin-bottom:20px; padding:25px; background:rgba(255,255,255,0.95); border-radius:15px; box-shadow:0 8px 32px rgba(0,0,0,0.1);">
+      <h3 style="margin-top:0; color:#333;">⚙️ 规则管理</h3>
+      <p class="small">管理文本抽取规则，支持查看、编辑、添加和删除</p>
+      
+      <div style="margin-bottom:20px;">
+        <button class="btn" style="background:#4CAF50" @click="loadRules">🔄 刷新规则</button>
+        <button class="btn" style="background:#2196F3; margin-left:8px" @click="showAddRuleModal = true">➕ 添加规则</button>
+      </div>
+      
+      <div v-if="rules.length > 0">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px;">
+          <div v-for="(rule, index) in rules" :key="index" class="rule-item">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+              <strong style="color:#333; font-size:1.1em;">{{ rule.name }}</strong>
+              <div style="display:flex; gap:5px;">
+                <button class="btn" style="background:#FF9800; padding:6px 12px; font-size:0.8em;" @click="editRule(index)" title="编辑规则">✏️</button>
+                <button class="btn" style="background:#f44336; padding:6px 12px; font-size:0.8em;" @click="deleteRule(index)" title="删除规则">🗑️</button>
+              </div>
+            </div>
+            <div style="font-size:0.9em; color:#555;">
+              <div style="margin-bottom:8px;">
+                <strong style="color:#333;">🔑 关键词:</strong>
+                <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                  <span v-for="(keyword, kIndex) in rule.keywords" :key="kIndex" style="background:#e3f2fd; color:#1976d2; padding:2px 8px; border-radius:12px; font-size:0.85em;">
+                    {{ keyword }}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <strong style="color:#333;">🔍 正则表达式:</strong>
+                <div style="background:#f5f5f5; padding:8px; border-radius:6px; margin-top:4px; font-family: monospace; font-size:0.85em; word-break:break-all;">
+                  {{ rule.regex || '无' }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else style="text-align:center; padding:40px; color:#666;">
+        <div style="font-size:3em; margin-bottom:10px;">⚙️</div>
+        <p style="margin:0;">暂无规则</p>
+        <p class="small">点击"添加规则"按钮来创建新的抽取规则</p>
+      </div>
+    </div>
+
+    <!-- 规则编辑/添加模态框 -->
+    <div v-if="showAddRuleModal || showEditRuleModal" class="modal">
+      <div class="modal-content">
+        <h3 style="margin-top:0; color:#333; border-bottom:2px solid #f0f0f0; padding-bottom:15px;">
+          {{ showEditRuleModal ? '✏️ 编辑规则' : '➕ 添加规则' }}
+        </h3>
+        
+        <div class="form-group">
+          <label>📝 规则名称:</label>
+          <input type="text" v-model="currentRule.name" placeholder="请输入规则名称（如：LVEF提取规则）">
+        </div>
+        
+        <div class="form-group">
+          <label>🔑 关键词 (每行一个):</label>
+          <textarea v-model="currentRule.keywordsText" placeholder="请输入关键词，每行一个&#10;例如：&#10;LVEF&#10;射血分数&#10;左室射血分数" style="min-height:100px;"></textarea>
+          <p class="small">每个关键词单独一行，系统会自动识别包含这些关键词的文本</p>
+        </div>
+        
+        <div class="form-group">
+          <label>🔍 正则表达式:</label>
+          <input type="text" v-model="currentRule.regex" placeholder="请输入正则表达式（如：\\d+%?）">
+          <p class="small">用于精确匹配和提取数值，如：\\d+%? 匹配数字和百分比</p>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:30px; padding-top:20px; border-top:1px solid #f0f0f0;">
+          <button class="btn" style="background:#666;" @click="closeRuleModal">取消</button>
+          <button class="btn" style="background:#4CAF50;" @click="saveRule">{{ showEditRuleModal ? '更新规则' : '添加规则' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 处理历史记录功能 -->
+    <div style="margin-bottom:20px; padding:25px; background:rgba(255,255,255,0.95); border-radius:15px; box-shadow:0 8px 32px rgba(0,0,0,0.1);">
+      <h3 style="margin-top:0; color:#333;">📊 处理历史记录</h3>
+      <p class="small">查看之前的处理结果和统计信息</p>
+      
+      <div style="margin-bottom:20px;">
+        <button class="btn" style="background:#2196F3" @click="loadHistory">🔄 刷新历史</button>
+        <button class="btn" style="background:#FF9800; margin-left:8px" @click="clearHistory">🗑️ 清空历史</button>
+      </div>
+      
+      <div v-if="historyRecords.length > 0">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">{{ historyRecords.length }}</div>
+            <div class="stat-label">总处理次数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ successCount }}</div>
+            <div class="stat-label">成功处理</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ failureCount }}</div>
+            <div class="stat-label">失败处理</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ historyRecords.reduce((total, r) => total + r.extractedParams, 0) }}</div>
+            <div class="stat-label">总提取参数</div>
+          </div>
+        </div>
+        
+        <!-- 历史记录列表 -->
+        <div v-for="(record, index) in historyRecords" :key="index" class="history-record">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <strong style="color:#333;">{{ record.timestamp }}</strong>
+            <span :style="{color: record.status === 'success' ? '#4CAF50' : '#ff4444', background: record.status === 'success' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 68, 68, 0.1)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.9em'}">
+              {{ record.status === 'success' ? '✅ 成功' : '❌ 失败' }}
+            </span>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size:0.9em;">
+            <div><strong>📄 文档数量:</strong> {{ record.documentCount }}</div>
+            <div><strong>🔍 提取参数:</strong> {{ record.extractedParams }}</div>
+            <div v-if="record.error" style="grid-column: 1 / -1; color:#ff4444; background:rgba(255,68,68,0.1); padding:8px; border-radius:6px;">
+              <strong>错误信息:</strong> {{ record.error }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else style="text-align:center; padding:40px; color:#666;">
+        <div style="font-size:3em; margin-bottom:10px;">📋</div>
+        <p style="margin:0;">暂无处理历史记录</p>
+        <p class="small">开始处理文档后，这里会显示处理历史</p>
+      </div>
+    </div>
+
+    <!-- 文本输入功能 -->
+    <div style="margin-bottom:20px; padding:15px; background:#f5f5f5; border-radius:8px;">
+      <h3>📝 文本输入</h3>
+      <div>
+        <label>Doc ID: <input v-model="docId" /></label>
+      </div>
+      <div style="margin-top:8px">
+        <textarea v-model="rawText" placeholder="在此粘贴检查报告或病历原文..."></textarea>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn" @click="processSingle">处理当前文本</button>
+        <button class="btn" style="background:#4caf50;margin-left:8px" @click="batchProcess">处理示例批量</button>
+        <button class="btn" style="background:#777;margin-left:8px" @click="downloadStructured">下载 JSON</button>
+      </div>
     </div>
 
     <h3 style="margin-top:20px">处理结果</h3>
@@ -85,7 +455,7 @@
 
   </div>
 
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script>
 const { createApp, ref, reactive } = Vue;
 createApp({
@@ -96,29 +466,349 @@ createApp({
     const failures = ref([])
     const annotateModal = ref(false)
     const anno = reactive({doc_id:'', raw_text:'', param_name:'', param_value:''})
+    const uploadedFiles = ref([])
+    const processingStatus = ref('')
+    const csvFile = ref(null)
+    const csvUploadStatus = ref('')
+    const rules = ref([])
+    const showAddRuleModal = ref(false)
+    const showEditRuleModal = ref(false)
+    const currentRule = reactive({
+      name: '',
+      keywordsText: '',
+      regex: '',
+      index: -1
+    })
+    const historyRecords = ref([])
+
+    // 文档上传相关函数
+    function triggerFileInput() {
+      const fileInput = document.getElementById('fileInput')
+      if (fileInput) {
+        fileInput.click()
+      }
+    }
+    
+    function triggerCsvInput() {
+      const csvInput = document.getElementById('csvInput')
+      if (csvInput) {
+        csvInput.click()
+      }
+    }
+    
+    function handleFileUpload(event) {
+      const files = Array.from(event.target.files)
+      uploadedFiles.value = [...uploadedFiles.value, ...files]
+      event.target.value = '' // 清空input以便再次选择相同文件
+    }
+
+    function removeFile(index) {
+      uploadedFiles.value.splice(index, 1)
+    }
+
+    async function processUploadedFiles() {
+      if (uploadedFiles.value.length === 0) {
+        alert('请先选择要上传的文件')
+        return
+      }
+
+      processingStatus.value = '正在读取和处理上传的文件...'
+      
+      try {
+        const documents = []
+        
+        for (const file of uploadedFiles.value) {
+          const content = await readFileContent(file)
+          const docId = file.name.replace(/\.[^/.]+$/, '') // 使用文件名作为doc_id
+          documents.push({ doc_id: docId, raw_text: content })
+        }
+
+        processingStatus.value = `正在处理 ${documents.length} 个文档...`
+        
+        const payload = { documents }
+        const res = await fetch('/api/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+        }
+        
+        const j = await res.json()
+        
+        // 调试信息：打印接收到的结果
+        console.log('API响应结果:', j)
+        console.log('处理结果数量:', j.results.length)
+        
+        // 确保结果正确显示 - 使用Vue的响应式更新
+        results.value = [...j.results]
+        
+        // 强制触发Vue更新
+        await new Promise(resolve => setTimeout(resolve, 0))
+        
+        processingStatus.value = `处理完成！共处理 ${documents.length} 个文档，提取到 ${j.results.reduce((total, r) => total + (r.extracted ? r.extracted.length : 0), 0)} 个参数`
+        
+        // 清空已上传文件列表
+        uploadedFiles.value = []
+        
+        // 更新 failures
+        await loadFailures()
+        
+        // 添加历史记录
+        addHistoryRecord(j.results, 'success')
+        
+        // 滚动到结果区域
+        setTimeout(() => {
+          const resultsSection = document.querySelector('h3[style*="margin-top:20px"]')
+          if (resultsSection) {
+            resultsSection.scrollIntoView({ behavior: 'smooth' })
+          }
+        }, 100)
+        
+      } catch (error) {
+        processingStatus.value = '处理失败'
+        alert('文档处理失败：' + error.message)
+        console.error('文档处理错误:', error)
+        // 添加失败历史记录
+        addHistoryRecord([], 'failed', error.message)
+      }
+    }
+
+    function readFileContent(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = (e) => resolve(e.target.result)
+        reader.onerror = (e) => reject(new Error('文件读取失败'))
+        reader.readAsText(file, 'UTF-8')
+      })
+    }
+
+    // CSV标注文件上传相关函数
+    function handleCsvUpload(event) {
+      const files = event.target.files
+      if (files.length > 0) {
+        csvFile.value = files[0]
+      }
+      event.target.value = '' // 清空input以便再次选择相同文件
+    }
+
+    function removeCsvFile() {
+      csvFile.value = null
+      csvUploadStatus.value = ''
+    }
+
+    async function uploadCsvAnnotations() {
+      if (!csvFile.value) {
+        alert('请先选择CSV文件')
+        return
+      }
+
+      csvUploadStatus.value = '正在上传CSV标注文件...'
+      
+      try {
+        const formData = new FormData()
+        formData.append('file', csvFile.value)
+        
+        const res = await fetch('/api/annotations/upload', {
+          method: 'POST',
+          body: formData
+        })
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+        }
+        
+        const result = await res.json()
+        csvUploadStatus.value = 'CSV标注文件上传成功！'
+        
+        // 上传成功后自动触发重训练
+        setTimeout(async () => {
+          await triggerRetrain()
+        }, 1000)
+        
+      } catch (error) {
+        csvUploadStatus.value = 'CSV文件上传失败'
+        alert('CSV标注文件上传失败：' + error.message)
+        console.error('CSV上传错误:', error)
+      }
+    }
+
+    // 规则管理相关函数
+    async function loadRules() {
+      try {
+        // 这里需要添加后端API来获取规则
+        // 暂时使用模拟数据
+        const mockRules = [
+          {
+            name: 'LVEF提取规则',
+            keywords: ['LVEF', '射血分数', '左室射血分数'],
+            regex: 'LVEF[：:\\s]*([0-9]+)%'
+          },
+          {
+            name: '左室收缩功能规则',
+            keywords: ['左室收缩功能', '收缩功能', '心室收缩'],
+            regex: '左室收缩功能[：:\\s]*(降低|减弱|正常|下降)'
+          }
+        ]
+        rules.value = mockRules
+      } catch (error) {
+        console.error('加载规则失败:', error)
+        alert('加载规则失败：' + error.message)
+      }
+    }
+
+    function editRule(index) {
+      const rule = rules.value[index]
+      currentRule.name = rule.name
+      currentRule.keywordsText = rule.keywords ? rule.keywords.join('\\n') : ''
+      currentRule.regex = rule.regex || ''
+      currentRule.index = index
+      showEditRuleModal.value = true
+    }
+
+    function deleteRule(index) {
+      if (confirm('确定要删除这条规则吗？')) {
+        rules.value.splice(index, 1)
+        // 这里需要添加后端API来保存规则变更
+        alert('规则删除成功（前端演示）')
+      }
+    }
+
+    function saveRule() {
+      if (!currentRule.name.trim()) {
+        alert('请输入规则名称')
+        return
+      }
+
+      const keywords = currentRule.keywordsText
+        .split('\\n')
+        .map(k => k.trim())
+        .filter(k => k.length > 0)
+
+      const newRule = {
+        name: currentRule.name.trim(),
+        keywords: keywords,
+        regex: currentRule.regex.trim()
+      }
+
+      if (showEditRuleModal.value && currentRule.index >= 0) {
+        // 编辑现有规则
+        rules.value[currentRule.index] = newRule
+      } else {
+        // 添加新规则
+        rules.value.push(newRule)
+      }
+
+      // 这里需要添加后端API来保存规则
+      alert('规则保存成功（前端演示）')
+      closeRuleModal()
+    }
+
+    function closeRuleModal() {
+      showAddRuleModal.value = false
+      showEditRuleModal.value = false
+      currentRule.name = ''
+      currentRule.keywordsText = ''
+      currentRule.regex = ''
+      currentRule.index = -1
+    }
+
+    // 处理历史记录相关函数
+    function loadHistory() {
+      // 从localStorage加载历史记录
+      try {
+        const savedHistory = localStorage.getItem('extractionHistory')
+        if (savedHistory) {
+          historyRecords.value = JSON.parse(savedHistory)
+        } else {
+          historyRecords.value = []
+        }
+      } catch (error) {
+        console.error('加载历史记录失败:', error)
+        historyRecords.value = []
+      }
+    }
+
+    function clearHistory() {
+      if (confirm('确定要清空所有处理历史记录吗？此操作不可恢复。')) {
+        historyRecords.value = []
+        localStorage.removeItem('extractionHistory')
+        alert('历史记录已清空')
+      }
+    }
+
+    function addHistoryRecord(results, status = 'success', error = null) {
+      const record = {
+        timestamp: new Date().toLocaleString('zh-CN'),
+        documentCount: results.length,
+        extractedParams: results.reduce((total, r) => total + (r.extracted ? r.extracted.length : 0), 0),
+        status: status,
+        error: error
+      }
+      
+      historyRecords.value.unshift(record) // 添加到开头
+      
+      // 只保留最近50条记录
+      if (historyRecords.value.length > 50) {
+        historyRecords.value = historyRecords.value.slice(0, 50)
+      }
+      
+      // 保存到localStorage
+      try {
+        localStorage.setItem('extractionHistory', JSON.stringify(historyRecords.value))
+      } catch (error) {
+        console.error('保存历史记录失败:', error)
+      }
+    }
+
+    // 计算属性：成功次数
+    const successCount = Vue.computed(() => {
+      return historyRecords.value.filter(r => r.status === 'success').length
+    })
+    
+    // 计算属性：失败次数
+    const failureCount = Vue.computed(() => {
+      return historyRecords.value.filter(r => r.status === 'failed').length
+    })
 
     async function processSingle(){
-      const payload = {documents:[{doc_id:docId.value, raw_text:rawText.value}]}
-      const res = await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-      const j = await res.json()
-      results.value = j.results
-      // 更新 failures
-      await loadFailures()
+      try {
+        const payload = {documents:[{doc_id:docId.value, raw_text:rawText.value}]}
+        const res = await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+        const j = await res.json()
+        results.value = j.results
+        // 更新 failures
+        await loadFailures()
+        // 添加历史记录
+        addHistoryRecord(j.results, 'success')
+      } catch (error) {
+        console.error('处理失败:', error)
+        addHistoryRecord([], 'failed', error.message)
+      }
     }
 
     async function batchProcess(){
-      // 简单示例批量
-      const docs = [
-        {doc_id:'A', raw_text:'检查报告：左室壁弥漫性运动减弱 左室收缩功能降低（LVEF: 40%） 备注: 无其他异常'},
-        {doc_id:'B', raw_text:'超声显示：LVEF=55%，舒张功能正常。左心房增大。'},
-        {doc_id:'C', raw_text:'心电图：窦性心律，ST段轻微抬高。评估：心肌缺血可能。'},
-        {doc_id:'D', raw_text:'病历小结：患者主诉胸闷，心室肌收缩力减弱，射血分数大约为 38% 左右。'},
-        {doc_id:'E', raw_text:'备注：LVEF大约四成。'}
-      ]
-      const res = await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({documents:docs})})
-      const j = await res.json()
-      results.value = j.results
-      await loadFailures()
+      try {
+        // 简单示例批量
+        const docs = [
+          {doc_id:'A', raw_text:'检查报告：左室壁弥漫性运动减弱 左室收缩功能降低（LVEF: 40%） 备注: 无其他异常'},
+          {doc_id:'B', raw_text:'超声显示：LVEF=55%，舒张功能正常。左心房增大。'},
+          {doc_id:'C', raw_text:'心电图：窦性心律，ST段轻微抬高。评估：心肌缺血可能。'},
+          {doc_id:'D', raw_text:'病历小结：患者主诉胸闷，心室肌收缩力减弱，射血分数大约为 38% 左右。'},
+          {doc_id:'E', raw_text:'备注：LVEF大约四成。'}
+        ]
+        const res = await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({documents:docs})})
+        const j = await res.json()
+        results.value = j.results
+        await loadFailures()
+        // 添加历史记录
+        addHistoryRecord(j.results, 'success')
+      } catch (error) {
+        console.error('批量处理失败:', error)
+        addHistoryRecord([], 'failed', error.message)
+      }
     }
 
     async function loadFailures(){
@@ -190,10 +880,21 @@ createApp({
 
     // init
     loadFailures()
+    loadHistory()
 
-    return {docId, rawText, processSingle, batchProcess, results, failures, markFailure, annotateModal, anno, openAnnotate, submitAnnotation, downloadStructured}
+    return {
+      docId, rawText, processSingle, batchProcess, results, failures, markFailure, 
+      annotateModal, anno, openAnnotate, submitAnnotation, downloadStructured,
+      uploadedFiles, processingStatus, handleFileUpload, removeFile, processUploadedFiles,
+      csvFile, csvUploadStatus, handleCsvUpload, removeCsvFile, uploadCsvAnnotations,
+      rules, showAddRuleModal, showEditRuleModal, currentRule, loadRules, editRule, deleteRule, saveRule, closeRuleModal,
+      historyRecords, successCount, failureCount, loadHistory, clearHistory, addHistoryRecord,
+      triggerFileInput, triggerCsvInput, triggerRetrain
+    }
   }
 }).mount('#app')
+
+
 </script>
 </body>
 </html>
