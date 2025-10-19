@@ -196,6 +196,279 @@
         font-size: 0.9em;
         opacity: 0.9;
       }
+      
+      /* 新增：处理结果提示样式 */
+      .success-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        z-index: 1001;
+        animation: slideInRight 0.5s ease, fadeOut 0.5s ease 4.5s forwards;
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      
+      .error-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #f44336, #d32f2f);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(244, 67, 54, 0.3);
+        z-index: 1001;
+        animation: slideInRight 0.5s ease, fadeOut 0.5s ease 4.5s forwards;
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      
+      @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      
+      /* 进度条样式 */
+      .progress-container {
+        width: 100%;
+        background: #f0f0f0;
+        border-radius: 10px;
+        margin: 15px 0;
+        overflow: hidden;
+        position: relative;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      }
+      
+      .progress-bar {
+        height: 12px;
+        background: linear-gradient(90deg, #4CAF50, #45a049, #2E7D32);
+        border-radius: 10px;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 0%;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        animation: shimmer 2s infinite;
+      }
+      
+      @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+      }
+      
+      .progress-text {
+        font-size: 0.95em;
+        color: #333;
+        margin-top: 8px;
+        text-align: center;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      
+      .progress-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+        color: #666;
+      }
+      
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4CAF50;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      
+      .processing-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        margin: 15px 0;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #4CAF50;
+      }
+      
+      .stat-item {
+        text-align: center;
+        padding: 8px;
+      }
+      
+      .stat-value {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #333;
+      }
+      
+      .stat-label {
+        font-size: 0.8em;
+        color: #666;
+        margin-top: 2px;
+      }
+      
+      /* 结果统计卡片样式 */
+      .result-summary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 25px;
+        border-radius: 15px;
+        margin: 20px 0;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      }
+      
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+      
+      .summary-item {
+        text-align: center;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        transition: transform 0.2s ease, background 0.2s ease;
+      }
+      
+      .summary-item:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.3);
+      }
+      
+      .summary-number {
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      
+      .summary-label {
+        font-size: 0.85em;
+        opacity: 0.9;
+      }
+      
+      /* 可视化图表样式 */
+      .visualization-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+      
+      .chart-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        backdrop-filter: blur(10px);
+      }
+      
+      .chart-title {
+        font-size: 1.1em;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      
+      .chart-bar {
+        height: 20px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        margin: 5px 0;
+        overflow: hidden;
+        position: relative;
+      }
+      
+      .chart-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        border-radius: 10px;
+        transition: width 0.5s ease;
+      }
+      
+      .chart-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8em;
+        margin-bottom: 5px;
+      }
+      
+      /* 参数分布样式 */
+      .param-distribution {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      
+      .param-tag {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      /* 性能指标样式 */
+      .performance-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+      
+      .metric-item {
+        text-align: center;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+      }
+      
+      .metric-value {
+        font-size: 1.4em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      
+      .metric-label {
+        font-size: 0.8em;
+        opacity: 0.9;
+      }
     </style>
 </head>
 <body>
@@ -205,27 +478,181 @@
       <p style="color: #666; font-size: 1.1em; margin: 10px 0 0 0;">基于规则和AI的医疗文档结构化信息提取平台</p>
     </div>
 
+    <!-- 提示消息组件 -->
+    <div v-if="showToast" :class="toastType === 'success' ? 'success-toast' : toastType === 'error' ? 'error-toast' : 'success-toast'">
+      <span v-if="toastType === 'success'" style="font-size:1.2em;">✅</span>
+      <span v-if="toastType === 'error'" style="font-size:1.2em;">❌</span>
+      <span v-if="toastType === 'warning'" style="font-size:1.2em;">⚠️</span>
+      <span>{{ toastMessage }}</span>
+    </div>
+
     <!-- 文档上传功能 -->
-    <div style="margin-bottom:20px; padding:15px; background:#f5f5f5; border-radius:8px;">
-      <h3>📁 文档上传</h3>
-      <div style="display:flex; gap:10px; align-items:center;">
+    <div style="margin-bottom:20px; padding:25px; background:rgba(255,255,255,0.95); border-radius:15px; box-shadow:0 8px 32px rgba(0,0,0,0.1);">
+      <h3 style="margin-top:0; color:#333;">📁 文档上传与处理</h3>
+      <p class="small">上传文档进行结构化信息提取，支持多种文件格式</p>
+      
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
         <input type="file" id="fileInput" multiple accept=".txt,.csv,.json" style="display:none" @change="handleFileUpload">
         <button class="btn" style="background:#2196F3" @click="triggerFileInput">
           📄 选择文件
         </button>
         <span class="small">支持 .txt, .csv, .json 格式（可多选）</span>
       </div>
-      <div v-if="uploadedFiles.length > 0" style="margin-top:10px;">
-        <div v-for="(file, index) in uploadedFiles" :key="index" style="display:flex; align-items:center; margin-bottom:5px;">
-          <span style="flex:1;">{{ file.name }} ({{ (file.size/1024).toFixed(1) }}KB)</span>
-          <button @click="removeFile(index)" style="background:#ff4444; color:white; border:none; padding:2px 8px; border-radius:3px; cursor:pointer;">×</button>
+      
+      <!-- 文件列表和进度显示 -->
+      <div v-if="uploadedFiles.length > 0" style="margin-top:15px;">
+        <div style="margin-bottom:15px;">
+          <h4 style="margin:0 0 10px 0; color:#333;">📋 已选择文件 ({{ uploadedFiles.length }} 个)</h4>
+          <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
+            <div style="display:flex; align-items:center; gap:10px; flex:1;">
+              <span style="font-weight:600;">{{ file.name }}</span>
+              <span class="small">({{ (file.size/1024).toFixed(1) }}KB)</span>
+            </div>
+            <button @click="removeFile(index)" style="background:#ff4444; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px;">移除</button>
+          </div>
         </div>
-        <button class="btn" style="background:#4CAF50; margin-top:8px;" @click="processUploadedFiles">
-          🚀 处理上传的文档
+        
+        <!-- 进度条和状态显示 -->
+        <div v-if="processingProgress.show" style="margin-bottom:20px;">
+          <!-- 状态指示器 -->
+          <div class="progress-status">
+            <div class="status-indicator"></div>
+            <span>正在处理中...</span>
+          </div>
+          
+          <!-- 实时统计信息 -->
+          <div v-if="processingProgress.value > 0 && processingProgress.value < 100" class="processing-stats">
+            <div class="stat-item">
+              <div class="stat-value">{{ uploadedFiles.length }}</div>
+              <div class="stat-label">待处理文档</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ Math.round(processingProgress.value) }}%</div>
+              <div class="stat-label">处理进度</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ processingProgress.estimatedTime || '--' }}</div>
+              <div class="stat-label">预计剩余</div>
+            </div>
+          </div>
+          
+          <!-- 进度条 -->
+          <div class="progress-container">
+            <div class="progress-bar" :style="{ width: processingProgress.value + '%' }"></div>
+          </div>
+          
+          <!-- 进度文本 -->
+          <div class="progress-text">
+            <span v-if="processingProgress.value < 100">🔄</span>
+            <span v-if="processingProgress.value === 100">✅</span>
+            {{ processingProgress.text }}
+          </div>
+        </div>
+        
+        <button class="btn" style="background:#4CAF50;" @click="processUploadedFiles" :disabled="processingProgress.show">
+          🚀 开始处理文档
         </button>
-        <div v-if="processingStatus" style="margin-top:8px; padding:8px; background:#e8f5e8; border-radius:4px; font-size:0.9em;">
-          {{ processingStatus }}
+      </div>
+    </div>
+    
+    <!-- 处理结果统计 -->
+    <div v-if="resultSummary.show" class="result-summary">
+      <h3 style="margin:0 0 10px 0; color:white;">🎉 处理完成！</h3>
+      <p style="margin:0; opacity:0.9;">文档处理已完成，以下是处理结果统计：</p>
+      
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-number">{{ resultSummary.totalDocuments }}</div>
+          <div class="summary-label">处理文档</div>
         </div>
+        <div class="summary-item">
+          <div class="summary-number">{{ resultSummary.extractedParams }}</div>
+          <div class="summary-label">提取参数</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">{{ resultSummary.totalLines }}</div>
+          <div class="summary-label">处理行数</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">{{ resultSummary.successLines }}</div>
+          <div class="summary-label">成功行数</div>
+        </div>
+      </div>
+      
+      <!-- 可视化分析区域 -->
+      <div v-if="showVisualization" class="visualization-grid">
+        <!-- 处理成功率图表 -->
+        <div class="chart-container">
+          <div class="chart-title">📈 处理成功率</div>
+          <div class="chart-label">
+            <span>成功率</span>
+            <span>{{ resultSummary.successRate }}%</span>
+          </div>
+          <div class="chart-bar">
+            <div class="chart-fill" :style="{ width: resultSummary.successRate + '%' }"></div>
+          </div>
+          <div style="font-size:0.8em; text-align:center; margin-top:5px;">
+            {{ resultSummary.successLines }} / {{ resultSummary.totalLines }} 行
+          </div>
+        </div>
+        
+        <!-- 参数分布图表 -->
+        <div class="chart-container">
+          <div class="chart-title">🔍 参数分布</div>
+          <div v-if="resultSummary.paramDistribution && resultSummary.paramDistribution.length > 0">
+            <div v-for="param in resultSummary.paramDistribution.slice(0, 5)" :key="param.name" class="chart-label">
+              <span>{{ param.name }}</span>
+              <span>{{ param.count }}</span>
+            </div>
+            <div v-if="resultSummary.paramDistribution.length > 5" style="font-size:0.8em; text-align:center; margin-top:5px;">
+              还有 {{ resultSummary.paramDistribution.length - 5 }} 个参数
+            </div>
+          </div>
+          <div v-else style="text-align:center; opacity:0.7; font-size:0.9em;">
+            暂无参数数据
+          </div>
+        </div>
+        
+        <!-- 性能指标 -->
+        <div class="chart-container">
+          <div class="chart-title">⚡ 性能指标</div>
+          <div class="performance-metrics">
+            <div class="metric-item">
+              <div class="metric-value">{{ resultSummary.processingTime }}s</div>
+              <div class="metric-label">处理时间</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-value">{{ resultSummary.documentsPerSecond }}</div>
+              <div class="metric-label">文档/秒</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-value">{{ resultSummary.paramsPerSecond }}</div>
+              <div class="metric-label">参数/秒</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 参数标签云 -->
+      <div v-if="resultSummary.paramDistribution && resultSummary.paramDistribution.length > 0" style="margin-top:20px;">
+        <div style="font-size:1.1em; font-weight:bold; margin-bottom:10px;">🏷️ 提取的参数类型</div>
+        <div class="param-distribution">
+          <span v-for="param in resultSummary.paramDistribution" :key="param.name" class="param-tag">
+            {{ param.name }} ({{ param.count }})
+          </span>
+        </div>
+      </div>
+      
+      <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3);" @click="scrollToResults">
+          📊 查看详细结果
+        </button>
+        <button class="btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3);" @click="downloadStructured">
+          📥 下载JSON结果
+        </button>
+        <button class="btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3);" @click="showVisualization = !showVisualization">
+          📈 {{ showVisualization ? '隐藏' : '显示' }}可视化
+        </button>
       </div>
     </div>
 
@@ -512,7 +939,133 @@ createApp({
       index: -1
     })
     const historyRecords = ref([])
+    
+    // 新增响应式数据：处理进度和结果统计
+    const processingProgress = reactive({
+      show: false,
+      value: 0,
+      text: '正在处理...',
+      estimatedTime: '--',
+      startTime: null
+    })
+    
+    const resultSummary = reactive({
+      show: false,
+      totalDocuments: 0,
+      totalLines: 0,
+      successLines: 0,
+      extractedParams: 0,
+      processingTime: 0,
+      successRate: 0,
+      documentsPerSecond: '0.0',
+      paramsPerSecond: '0.0',
+      paramDistribution: []
+    })
+    
+    const showVisualization = ref(true)
+    
+    const toastMessage = ref('')
+    const toastType = ref('success') // success, error, warning
+    const showToast = ref(false)
 
+    // 新增函数：显示提示消息
+    function showToastMessage(message, type = 'success') {
+      toastMessage.value = message
+      toastType.value = type
+      showToast.value = true
+      
+      // 3秒后自动隐藏
+      setTimeout(() => {
+        showToast.value = false
+      }, 3000)
+    }
+    
+    // 新增函数：更新处理进度
+    function updateProgress(value, text) {
+      processingProgress.value = value
+      processingProgress.text = text
+      processingProgress.show = true
+      
+      // 计算预计剩余时间
+      if (value > 0 && value < 100) {
+        if (!processingProgress.startTime) {
+          processingProgress.startTime = Date.now()
+        }
+        
+        const elapsedTime = Date.now() - processingProgress.startTime
+        const estimatedTotalTime = (elapsedTime / value) * 100
+        const remainingTime = estimatedTotalTime - elapsedTime
+        
+        if (remainingTime > 0) {
+          const minutes = Math.floor(remainingTime / 60000)
+          const seconds = Math.floor((remainingTime % 60000) / 1000)
+          
+          if (minutes > 0) {
+            processingProgress.estimatedTime = `${minutes}分${seconds}秒`
+          } else {
+            processingProgress.estimatedTime = `${seconds}秒`
+          }
+        }
+      }
+    }
+    
+    // 新增函数：显示结果统计
+    function showResultSummary(results, processingTime) {
+      const totalDocuments = results.length
+      const totalLines = results.reduce((total, r) => total + (r.raw_text ? r.raw_text.split('\n').length : 0), 0)
+      const successLines = results.reduce((total, r) => total + (r.extracted ? r.extracted.length : 0), 0)
+      const extractedParams = results.reduce((total, r) => total + (r.extracted ? r.extracted.length : 0), 0)
+      
+      // 计算成功率
+      const successRate = totalLines > 0 ? Math.round((successLines / totalLines) * 100) : 0
+      
+      // 计算性能指标
+      const documentsPerSecond = parseFloat(processingTime) > 0 ? (totalDocuments / parseFloat(processingTime)).toFixed(1) : '0.0'
+      const paramsPerSecond = parseFloat(processingTime) > 0 ? (extractedParams / parseFloat(processingTime)).toFixed(1) : '0.0'
+      
+      // 分析参数分布
+      const paramDistribution = analyzeParamDistribution(results)
+      
+      resultSummary.totalDocuments = totalDocuments
+      resultSummary.totalLines = totalLines
+      resultSummary.successLines = successLines
+      resultSummary.extractedParams = extractedParams
+      resultSummary.processingTime = processingTime
+      resultSummary.successRate = successRate
+      resultSummary.documentsPerSecond = documentsPerSecond
+      resultSummary.paramsPerSecond = paramsPerSecond
+      resultSummary.paramDistribution = paramDistribution
+      resultSummary.show = true
+    }
+    
+    // 新增函数：分析参数分布
+    function analyzeParamDistribution(results) {
+      const paramCounts = {}
+      
+      results.forEach(result => {
+        if (result.extracted && Array.isArray(result.extracted)) {
+          result.extracted.forEach(param => {
+            if (param.name) {
+              paramCounts[param.name] = (paramCounts[param.name] || 0) + 1
+            }
+          })
+        }
+      })
+      
+      // 转换为数组并按数量排序
+      return Object.entries(paramCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+    }
+    
+    // 新增函数：滚动到结果区域
+    function scrollToResults() {
+      const resultsSection = document.querySelector('h3[style*="margin-top:20px"]')
+      if (resultsSection) {
+        resultsSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+    
     // 文档上传相关函数
     function triggerFileInput() {
       const fileInput = document.getElementById('fileInput')
@@ -540,21 +1093,34 @@ createApp({
 
     async function processUploadedFiles() {
       if (uploadedFiles.value.length === 0) {
-        alert('请先选择要上传的文件')
+        showToastMessage('请先选择要上传的文件', 'warning')
         return
       }
 
+      const startTime = Date.now()
+      
+      // 重置进度状态
+      processingProgress.startTime = Date.now()
+      processingProgress.estimatedTime = '--'
+      
+      // 显示处理进度
+      updateProgress(0, '正在准备处理文件...')
       processingStatus.value = '正在读取和处理上传的文件...'
       
       try {
         const documents = []
         
-        for (const file of uploadedFiles.value) {
+        // 读取文件内容并更新进度
+        for (let i = 0; i < uploadedFiles.value.length; i++) {
+          const file = uploadedFiles.value[i]
+          updateProgress((i / uploadedFiles.value.length) * 40, `正在读取文件: ${file.name}...`)
+          
           const content = await readFileContent(file)
           const docId = file.name.replace(/\.[^/.]+$/, '') // 使用文件名作为doc_id
           documents.push({ doc_id: docId, raw_text: content })
         }
 
+        updateProgress(50, `正在处理 ${documents.length} 个文档...`)
         processingStatus.value = `正在处理 ${documents.length} 个文档...`
         
         const payload = { documents }
@@ -568,6 +1134,7 @@ createApp({
           throw new Error(`HTTP ${res.status}: ${res.statusText}`)
         }
         
+        updateProgress(80, '正在解析处理结果...')
         const j = await res.json()
         
         // 调试信息：打印接收到的结果
@@ -580,7 +1147,17 @@ createApp({
         // 强制触发Vue更新
         await new Promise(resolve => setTimeout(resolve, 0))
         
-        processingStatus.value = `处理完成！共处理 ${documents.length} 个文档，提取到 ${j.results.reduce((total, r) => total + (r.extracted ? r.extracted.length : 0), 0)} 个参数`
+        const processingTime = ((Date.now() - startTime) / 1000).toFixed(2)
+        const extractedParams = j.results.reduce((total, r) => total + (r.extracted ? r.extracted.length : 0), 0)
+        
+        updateProgress(100, '处理完成！')
+        processingStatus.value = `处理完成！共处理 ${documents.length} 个文档，提取到 ${extractedParams} 个参数，耗时 ${processingTime} 秒`
+        
+        // 显示成功提示
+        showToastMessage(`文件处理完成！成功处理 ${documents.length} 个文档，提取到 ${extractedParams} 个参数。`, 'success')
+        
+        // 显示结果统计
+        showResultSummary(j.results, processingTime)
         
         // 清空已上传文件列表
         uploadedFiles.value = []
@@ -599,9 +1176,21 @@ createApp({
           }
         }, 100)
         
+        // 2秒后隐藏进度条
+        setTimeout(() => {
+          processingProgress.show = false
+          processingProgress.value = 0
+          processingProgress.startTime = null
+          processingProgress.estimatedTime = '--'
+        }, 2000)
+        
       } catch (error) {
+        processingProgress.show = false
+        processingProgress.value = 0
+        processingProgress.startTime = null
+        processingProgress.estimatedTime = '--'
         processingStatus.value = '处理失败'
-        alert('文档处理失败：' + error.message)
+        showToastMessage(`文档处理失败：${error.message}`, 'error')
         console.error('文档处理错误:', error)
         // 添加失败历史记录
         addHistoryRecord([], 'failed', error.message)
@@ -899,23 +1488,67 @@ createApp({
     })
 
     async function processSingle(){
+      const startTime = Date.now()
+      
+      // 重置进度状态
+      processingProgress.startTime = Date.now()
+      processingProgress.estimatedTime = '--'
+      
       try {
+        updateProgress(30, '正在处理单个文档...')
+        
         const payload = {documents:[{doc_id:docId.value, raw_text:rawText.value}]}
         const res = await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+        }
+        
+        updateProgress(80, '正在解析处理结果...')
         const j = await res.json()
         results.value = j.results
+        
+        const processingTime = ((Date.now() - startTime) / 1000).toFixed(2)
+        const extractedParams = j.results.reduce((total, r) => total + (r.extracted ? r.extracted.length : 0), 0)
+        
+        updateProgress(100, '处理完成！')
+        showToastMessage(`单个文档处理完成！提取到 ${extractedParams} 个参数，耗时 ${processingTime} 秒`, 'success')
+        showResultSummary(j.results, processingTime)
+        
         // 更新 failures
         await loadFailures()
         // 添加历史记录
         addHistoryRecord(j.results, 'success')
+        
+        // 2秒后隐藏进度条
+        setTimeout(() => {
+          processingProgress.show = false
+          processingProgress.value = 0
+          processingProgress.startTime = null
+          processingProgress.estimatedTime = '--'
+        }, 2000)
+        
       } catch (error) {
+        processingProgress.show = false
+        processingProgress.value = 0
+        processingProgress.startTime = null
+        processingProgress.estimatedTime = '--'
+        showToastMessage(`文档处理失败：${error.message}`, 'error')
         console.error('处理失败:', error)
         addHistoryRecord([], 'failed', error.message)
       }
     }
 
     async function batchProcess(){
+      const startTime = Date.now()
+      
+      // 重置进度状态
+      processingProgress.startTime = Date.now()
+      processingProgress.estimatedTime = '--'
+      
       try {
+        updateProgress(20, '正在准备批量处理数据...')
+        
         // 简单示例批量
         const docs = [
           {doc_id:'A', raw_text:'检查报告：左室壁弥漫性运动减弱 左室收缩功能降低（LVEF: 40%） 备注: 无其他异常'},
@@ -924,13 +1557,43 @@ createApp({
           {doc_id:'D', raw_text:'病历小结：患者主诉胸闷，心室肌收缩力减弱，射血分数大约为 38% 左右。'},
           {doc_id:'E', raw_text:'备注：LVEF大约四成。'}
         ]
+        
+        updateProgress(50, '正在处理批量文档...')
         const res = await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({documents:docs})})
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+        }
+        
+        updateProgress(80, '正在解析处理结果...')
         const j = await res.json()
         results.value = j.results
+        
+        const processingTime = ((Date.now() - startTime) / 1000).toFixed(2)
+        const extractedParams = j.results.reduce((total, r) => total + (r.extracted ? r.extracted.length : 0), 0)
+        
+        updateProgress(100, '批量处理完成！')
+        showToastMessage(`批量处理完成！成功处理 ${docs.length} 个文档，提取到 ${extractedParams} 个参数，耗时 ${processingTime} 秒`, 'success')
+        showResultSummary(j.results, processingTime)
+        
         await loadFailures()
         // 添加历史记录
         addHistoryRecord(j.results, 'success')
+        
+        // 2秒后隐藏进度条
+        setTimeout(() => {
+          processingProgress.show = false
+          processingProgress.value = 0
+          processingProgress.startTime = null
+          processingProgress.estimatedTime = '--'
+        }, 2000)
+        
       } catch (error) {
+        processingProgress.show = false
+        processingProgress.value = 0
+        processingProgress.startTime = null
+        processingProgress.estimatedTime = '--'
+        showToastMessage(`批量处理失败：${error.message}`, 'error')
         console.error('批量处理失败:', error)
         addHistoryRecord([], 'failed', error.message)
       }
@@ -1014,7 +1677,10 @@ createApp({
       csvFile, csvUploadStatus, handleCsvUpload, removeCsvFile, uploadCsvAnnotations,
       rules, showAddRuleModal, showEditRuleModal, currentRule, loadRules, editRule, deleteRule, saveRule, closeRuleModal,
       historyRecords, successCount, failureCount, loadHistory, clearHistory, addHistoryRecord,
-      triggerFileInput, triggerCsvInput, triggerRetrain
+      triggerFileInput, triggerCsvInput, triggerRetrain,
+      // 新增响应式数据和方法
+      processingProgress, resultSummary, toastMessage, toastType, showToast, showVisualization,
+      showToastMessage, updateProgress, showResultSummary
     }
   }
 }).mount('#app')
