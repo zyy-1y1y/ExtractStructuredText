@@ -474,7 +474,7 @@
 <body>
   <div id="app">
     <div style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); text-align: center;">
-      <h2>📊 智能文本抽取系统</h2>
+      <h2>智能文本提取系统</h2>
       <p style="color: #666; font-size: 1.1em; margin: 10px 0 0 0;">基于规则和AI的医疗文档结构化信息提取平台</p>
     </div>
 
@@ -897,16 +897,36 @@
       </div>
     </div>
 
-    <!-- 简单的注释弹窗 -->
+    <!-- 支持多参数的注释弹窗 -->
     <div v-if="annotateModal" style="position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center">
-      <div style="background:#fff;padding:20px;border-radius:8px;width:600px">
+      <div style="background:#fff;padding:20px;border-radius:8px;width:700px;max-height:80vh;overflow-y:auto">
         <h4>添加人工标注</h4>
-        <div>Doc ID: <input v-model="anno.doc_id" /></div>
-        <div style="margin-top:8px">Raw Text:<br/><textarea v-model="anno.raw_text" style="height:80px"></textarea></div>
-        <div style="margin-top:8px">Param Name: <input v-model="anno.param_name" /></div>
-        <div style="margin-top:8px">Param Value: <input v-model="anno.param_value" /></div>
-        <div style="margin-top:12px">
-          <button class="btn" @click="submitAnnotation">提交</button>
+        <div>Doc ID: <input v-model="anno.doc_id" readonly style="background:#f5f5f5" /></div>
+        <div style="margin-top:8px">原始文本:<br/><textarea v-model="anno.raw_text" style="height:80px;width:100%" readonly></textarea></div>
+        
+        <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
+          <h5>参数标注</h5>
+          <div v-for="(param, index) in anno.params" :key="index" style="margin-bottom:12px;padding:12px;border:1px solid #ddd;border-radius:4px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="flex:1">
+                <div>参数名称:</div>
+                <input v-model="param.param_name" placeholder="例如：LVEF" style="width:100%" />
+              </div>
+              <div style="flex:1">
+                <div>参数值:</div>
+                <input v-model="param.param_value" placeholder="例如：40%" style="width:100%" />
+              </div>
+              <div style="margin-top:20px">
+                <button @click="removeParam(index)" style="background:#ff4444;color:white;border:none;padding:4px 8px;border-radius:3px;cursor:pointer">删除</button>
+              </div>
+            </div>
+          </div>
+          
+          <button @click="addParam()" style="background:#4CAF50;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-bottom:16px">+ 添加参数</button>
+        </div>
+        
+        <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
+          <button class="btn" @click="submitAnnotation">提交标注</button>
           <button class="btn" style="background:#999;margin-left:8px" @click="annotateModal=false">取消</button>
         </div>
       </div>
@@ -924,7 +944,7 @@ createApp({
     const results = ref([])
     const failures = ref([])
     const annotateModal = ref(false)
-    const anno = reactive({doc_id:'', raw_text:'', param_name:'', param_value:''})
+    const anno = reactive({doc_id:'', raw_text:'', params: [{param_name: '', param_value: ''}]})
     const uploadedFiles = ref([])
     const processingStatus = ref('')
     const csvFile = ref(null)
@@ -1617,16 +1637,39 @@ createApp({
     function openAnnotate(f){
       anno.doc_id = f.doc_id
       anno.raw_text = f.raw_text
+      anno.params = [{param_name: '', param_value: ''}]
       annotateModal.value = true
     }
 
+    function addParam() {
+      anno.params.push({param_name: '', param_value: ''})
+    }
+
+    function removeParam(index) {
+      if (anno.params.length > 1) {
+        anno.params.splice(index, 1)
+      }
+    }
+
     async function submitAnnotation(){
-      const form = new FormData();
-      form.append('doc_id', anno.doc_id)
-      form.append('raw_text', anno.raw_text)
-      form.append('param_name', anno.param_name)
-      form.append('param_value', anno.param_value)
-      await fetch('/api/annotations/add',{method:'POST', body: form})
+      // 过滤掉空的参数
+      const validParams = anno.params.filter(p => p.param_name.trim() && p.param_value.trim())
+      
+      if (validParams.length === 0) {
+        alert('请至少填写一个有效的参数名称和参数值')
+        return
+      }
+
+      // 为每个参数单独提交标注
+      for (const param of validParams) {
+        const form = new FormData();
+        form.append('doc_id', anno.doc_id)
+        form.append('raw_text', anno.raw_text)
+        form.append('param_name', param.param_name)
+        form.append('param_value', param.param_value)
+        await fetch('/api/annotations/add',{method:'POST', body: form})
+      }
+      
       annotateModal.value = false
       
       // 提交标注后自动触发 retrain
@@ -1672,7 +1715,7 @@ createApp({
 
     return {
       docId, rawText, processSingle, batchProcess, results, failures, markFailure, 
-      annotateModal, anno, openAnnotate, submitAnnotation, downloadStructured,
+      annotateModal, anno, openAnnotate, addParam, removeParam, submitAnnotation, downloadStructured,
       uploadedFiles, processingStatus, handleFileUpload, removeFile, processUploadedFiles,
       csvFile, csvUploadStatus, handleCsvUpload, removeCsvFile, uploadCsvAnnotations,
       rules, showAddRuleModal, showEditRuleModal, currentRule, loadRules, editRule, deleteRule, saveRule, closeRuleModal,

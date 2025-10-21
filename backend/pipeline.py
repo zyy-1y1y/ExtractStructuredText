@@ -77,6 +77,12 @@ def load_rules(path: str = RULES_PATH) -> List[Dict[str, Any]]:
     Returns:
         List[Dict[str, Any]]: 解析规则列表
     """
+    # 确保规则文件存在，如果不存在则创建默认规则
+    if not os.path.exists(path):
+        logger.info(f"规则文件 {path} 不存在，创建默认规则")
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(DEFAULT_RULES, f, ensure_ascii=False, indent=2)
+    
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
